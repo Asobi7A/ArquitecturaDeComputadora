@@ -1,0 +1,84 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+
+using namespace std;
+
+int main() {
+    const int TAM_GRANDE = 1000;
+    const int TAM_PEQUENO = 100;
+    const char* NOMBRE_ARCHIVO = "datos_secundarios.bin";
+
+    {
+        ofstream archivoSalida(NOMBRE_ARCHIVO, ios::binary);
+        if (!archivoSalida) {
+            cerr << "Error al crear el archivo en memoria secundaria." << endl;
+            return 1;
+        }
+        int datosTemporales[TAM_GRANDE];
+        for (int i = 0; i < TAM_GRANDE; i++) {
+            datosTemporales[i] = i + 1;
+        }
+        archivoSalida.write(reinterpret_cast<char*>(datosTemporales), sizeof(datosTemporales));
+        archivoSalida.close();
+    }
+
+    int arregloPrincipal[TAM_GRANDE];
+    {
+        ifstream archivoEntrada(NOMBRE_ARCHIVO, ios::binary);
+        if (!archivoEntrada) {
+            cerr << "Error al abrir el archivo de memoria secundaria." << endl;
+            return 1;
+        }
+        archivoEntrada.read(reinterpret_cast<char*>(arregloPrincipal), sizeof(arregloPrincipal));
+        archivoEntrada.close();
+    }
+
+    cout << "=== ESTADO INICIAL DEL ARREGLO PRINCIPAL ===" << endl;
+    cout << "Primeros 5 elementos: ";
+    for (int i = 0; i < 5; i++) {
+        cout << arregloPrincipal[i] << " ";
+    }
+    cout << endl;
+
+    cout << "Ultimos 5 elementos: ";
+    for (int i = TAM_GRANDE - 5; i < TAM_GRANDE; i++) {
+        cout << arregloPrincipal[i] << " ";
+    }
+    cout << "\n\n";
+
+    int arregloSecundario[TAM_PEQUENO];
+
+    memmove(arregloSecundario, &arregloPrincipal[500], TAM_PEQUENO * sizeof(int));
+
+    memset(&arregloPrincipal[500], 0, TAM_PEQUENO * sizeof(int));
+
+    cout << "=== 100 ELEMENTOS TRANSFERIDOS AL SEGUNDO ARREGLO ===" << endl;
+    for (int i = 0; i < TAM_PEQUENO; i++) {
+        cout << arregloSecundario[i] << " ";
+        if ((i + 1) % 20 == 0) cout << endl;
+    }
+    cout << "\n";
+
+    cout << "=== VALIDACION DE CEROS EN EL ARREGLO PRINCIPAL (Indices 500 al 599) ===" << endl;
+    bool cerosCorrectos = true;
+    for (int i = 500; i < 600; i++) {
+        if (arregloPrincipal[i] != 0) {
+            cerosCorrectos = false;
+            break;
+        }
+    }
+
+    if (cerosCorrectos) {
+        cout << "¡Validacion exitosa! Los indices 500 al 599 del primer arreglo contienen ceros correctamente." << endl;
+    } else {
+        cout << "Error: Se encontraron valores distintos de cero en el rango especificado." << endl;
+    }
+
+    cout << "\nMuestra alrededor del indice 500 en el arreglo principal: " << endl;
+    for (int i = 498; i <= 503; i++) {
+        cout << "Indice " << i << ": " << arregloPrincipal[i] << endl;
+    }
+
+    return 0;
+}
