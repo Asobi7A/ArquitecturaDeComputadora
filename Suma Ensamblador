@@ -1,0 +1,26 @@
+#include <stdio.h>
+
+int main() {
+    int numeros[] = {5, 12, 8, 23, 4};
+    int longitud = sizeof(numeros) / sizeof(numeros[0]);
+    int suma = 0;
+
+    __asm__ (
+        "movl $0, %%eax\n\t"       
+        "movl %2, %%edx\n\t"      
+        "bucle_inicio:\n\t"        
+        "cmpl $0, %%edx\n\t"      
+        "jle bucle_fin\n\t"         
+        "decl %%edx\n\t"            
+        "addl (%1, %%edx, 4), %%eax\n\t" 
+        "jmp bucle_inicio\n\t"      
+        "bucle_fin:\n\t"           
+        "movl %%eax, %0\n\t"        
+        : "=r"(suma)                
+        : "r" (numeros), "r" (longitud) 
+        : "%eax", "%edx", "cc"     
+    );
+
+    printf("La suma total es: %d\n", suma);
+    return 0;
+}
